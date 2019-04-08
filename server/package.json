@@ -1,5 +1,5 @@
 {
-  "name": "bash-language-server",
+  "name": "@thomasjm/bash-language-server",
   "description": "A language server for Bash",
   "author": "Mads Hartmann",
   "license": "MIT",
