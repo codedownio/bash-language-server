@@ -178,7 +178,7 @@ export default class BashServer {
     return this.analyzer.findReferences(word)
   }
 
-  private onCompletion(pos: LSP.TextDocumentPositionParams): LSP.CompletionItem[] {
+  private async onCompletion(pos: LSP.TextDocumentPositionParams): Promise<LSP.CompletionItem[]> {
     this.connection.console.log(
       `Asked for completions at ${pos.position.line}:${pos.position.character}`,
     )
@@ -204,23 +204,48 @@ export default class BashServer {
       },
     }))
 
-    const allCompletions = [
+    const allCompletions: LSP.CompletionItem[] = [
       ...symbolCompletions,
       ...programCompletions,
       ...builtinsCompletions,
     ]
 
+    let filtered = allCompletions
+
     // Filter to only return suffixes of the current word
     const currentWord = this.getWordAtPoint(pos)
     if (currentWord) {
-      return allCompletions.filter(
+      filtered = allCompletions.filter(
         (x: LSP.CompletionItem) => x.label && x.label.startsWith(currentWord),
       )
-    } else {
-      // If we couldn't determine the word for some reason (like being at the beginning of a line)
-      // then return all completions
-      return allCompletions
     }
+
+    // Sort by label
+    const sorted = filtered.sort((a, b) => {
+      if (a.label < b.label) {
+        return -1
+      } else if (a.label > b.label) {
+        return 1
+      } else {
+        return 0
+      }
+    })
+
+    // Fill in the "documentation" on the first N items
+    // const N = 20
+    // for (const item of sorted.slice(N)) {
+    //   try {
+    //     if (item.data.type === 'executable') {
+    //       item.documentation = await this.executables.documentation(item.label)
+    //     } else if (item.data.type === 'builtin') {
+    //       item.documentation = await Builtins.documentation(item.label)
+    //     }
+    //   } catch (e) {
+    //     item.documentation = null
+    //   }
+    // }
+
+    return sorted
   }
 
   private async onCompletionResolve(
@@ -232,13 +257,13 @@ export default class BashServer {
         const doc = await this.executables.documentation(name)
         return {
           ...item,
-          detail: doc,
+          documentation: doc,
         }
       } else if (type === 'builtin') {
         const doc = await Builtins.documentation(name)
         return {
           ...item,
-          detail: doc,
+          documentation: doc,
         }
       } else {
         return item
