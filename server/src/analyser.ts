@@ -312,8 +312,13 @@ export default class Analyzer {
     const document = this.uriToTreeSitterTrees[uri]
     const contents = this.uriToFileContent[uri]
 
+    // document can be missing if the file has not yet been analyzed
+    if (!document) {
+      return null
+    }
+
+    // document.rootNode can be missing if there was a parse failure (?)
     if (!document.rootNode) {
-      // Check for lacking rootNode (due to failed parse?)
       return null
     }
 
