@@ -1,7 +1,7 @@
 import * as LSP from 'vscode-languageserver'
 
 import * as TurndownService from 'turndown'
-import Analyzer from './analyser'
+import Analyzer from './analyzer'
 import * as Builtins from './builtins'
 import * as config from './config'
 import Executables from './executables'

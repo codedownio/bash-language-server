@@ -2,7 +2,7 @@
 
 import * as LSP from 'vscode-languageserver'
 
-import Analyzer from './analyser'
+import Analyzer from './analyzer'
 import BashServer from './server'
 
 // tslint:disable-next-line:no-var-requires
