@@ -9,16 +9,21 @@ export function execShellScript(body: string): Promise<string> {
 
   return new Promise((resolve, reject) => {
     let output = ''
+    let err = ''
 
     process.stdout.on('data', buffer => {
       output += buffer
+    })
+
+    process.stderr.on('data', buffer => {
+      err += buffer
     })
 
     process.on('close', returnCode => {
       if (returnCode === 0) {
         resolve(output)
       } else {
-        reject(`Failed to execute ${body}`)
+        reject(`Failed to execute ${body}. Stdout: '${output}'. Stderr: '${err}'.`)
       }
     })
   })

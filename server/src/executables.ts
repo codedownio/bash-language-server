@@ -51,6 +51,8 @@ export default class Executables {
       return !doc
         ? Promise.resolve(`No MAN page for ${executable}`)
         : Promise.resolve(doc)
+    }).catch(err => {
+      return Promise.resolve(`Error running 'man ${executable}': '${err}'`)
     })
   }
 }
