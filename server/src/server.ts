@@ -11,23 +11,6 @@ import Executables from './executables'
  * the various parts of the Language Server Protocol.
  */
 export default class BashServer {
-  /**
-   * Initialize the server based on a connection to the client and the protocols
-   * initialization parameters.
-   */
-  public static initialize(
-    connection: LSP.Connection,
-    params: LSP.InitializeParams,
-  ): Promise<BashServer> {
-    return Promise.all([
-      Executables.fromPath(process.env.PATH),
-      Analyzer.fromRoot(connection, params.rootPath),
-    ]).then(xs => {
-      const executables = xs[0]
-      const analyzer = xs[1]
-      return new BashServer(connection, executables, analyzer)
-    })
-  }
 
   private executables: Executables
   private analyzer: Analyzer
@@ -35,13 +18,19 @@ export default class BashServer {
   private documents: LSP.TextDocuments = new LSP.TextDocuments()
   private connection: LSP.Connection
 
-  private constructor(
+  public constructor(
     connection: LSP.Connection,
-    executables: Executables,
     analyzer: Analyzer,
   ) {
     this.connection = connection
-    this.executables = executables
+
+    this.executables = new Executables([])
+    const executablesPromise = Executables.fromPath(process.env.PATH)
+    executablesPromise.then(executables => {
+      this.connection.console.log(`Finished loading executables`)
+      this.executables = executables
+    })
+
     this.analyzer = analyzer
   }
 

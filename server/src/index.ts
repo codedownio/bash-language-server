@@ -2,6 +2,7 @@
 
 import * as LSP from 'vscode-languageserver'
 
+import Analyzer from './analyser'
 import BashServer from './server'
 
 // tslint:disable-next-line:no-var-requires
@@ -15,19 +16,20 @@ export function listen() {
     new LSP.StreamMessageWriter(process.stdout),
   )
 
-  connection.onInitialize((params: LSP.InitializeParams): Promise<
-    LSP.InitializeResult
-  > => {
+  const analyzer = new Analyzer()
+  const server = new BashServer(connection, analyzer)
+
+  server.register(connection)
+
+  connection.onInitialize((params: LSP.InitializeParams): Promise<LSP.InitializeResult> => {
     connection.console.log(`Initialized server v. ${pkg.version} for ${params.rootUri}`)
 
-    return BashServer.initialize(connection, params)
-      .then(server => {
-        server.register(connection)
-        return server
-      })
-      .then(server => ({
-        capabilities: server.capabilities(),
-      }))
+    // Begin analyzing the root directory, but don't hold up the response on it
+    analyzer.analyzeRoot(connection, params.rootPath)
+
+    return Promise.resolve({
+      capabilities: server.capabilities(),
+    })
   })
 
   connection.listen()

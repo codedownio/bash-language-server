@@ -26,21 +26,18 @@ type Texts = { [uri: string]: string }
  * tree-sitter to find definitions, reference, etc.
  */
 export default class Analyzer {
+
   /**
-   * Initialize the Analyzer based on a connection to the client and an optional
-   * root path.
-   *
-   * If the rootPath is provided it will initialize all *.sh files it can find
-   * anywhere on that path.
+   * Asynchronously analyze the shell files found under rootPath
    */
-  public static fromRoot(
+  public analyzeRoot(
     connection: LSP.Connection,
     rootPath: string | null,
-  ): Promise<Analyzer> {
+  ): Promise<{}> {
     // This happens if the users opens a single bash script without having the
     // 'window' associated with a specific project.
     if (!rootPath) {
-      return Promise.resolve(new Analyzer())
+      return Promise.reject(`Couldn't analyze empty root path`)
     }
 
     return new Promise((resolve, reject) => {
@@ -48,14 +45,13 @@ export default class Analyzer {
         if (err != null) {
           reject(err)
         } else {
-          const analyzer = new Analyzer()
           paths.forEach(p => {
             const absolute = Path.join(rootPath, p)
             // only analyze files, glob pattern may match directories
             if (fs.existsSync(absolute) && fs.lstatSync(absolute).isFile()) {
               const uri = 'file://' + absolute
               connection.console.log('Analyzing ' + uri)
-              analyzer.analyze(
+              this.analyze(
                 uri,
                 LSP.TextDocument.create(
                   uri,
@@ -66,7 +62,7 @@ export default class Analyzer {
               )
             }
           })
-          resolve(analyzer)
+          resolve()
         }
       })
     })

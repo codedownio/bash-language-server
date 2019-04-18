@@ -23,7 +23,7 @@ export default class Executables {
 
   private executables: Set<string>
 
-  private constructor(executables: string[]) {
+  public constructor(executables: string[]) {
     this.executables = new Set(executables)
   }
 
