@@ -5,6 +5,7 @@ import Analyzer from './analyzer'
 import * as Builtins from './builtins'
 import * as config from './config'
 import Executables from './executables'
+import { CompletionItem } from 'vscode-languageserver';
 
 /**
  * The BashServer glues together the separate components to implement
@@ -220,21 +221,19 @@ export default class BashServer {
       }
     })
 
-    // Fill in the "documentation" on the first N items
-    // const N = 20
-    // for (const item of sorted.slice(N)) {
-    //   try {
-    //     if (item.data.type === 'executable') {
-    //       item.documentation = await this.executables.documentation(item.label)
-    //     } else if (item.data.type === 'builtin') {
-    //       item.documentation = await Builtins.documentation(item.label)
-    //     }
-    //   } catch (e) {
-    //     item.documentation = null
-    //   }
-    // }
+    // Dedup (since some symbols like "echo" are both builtins and programs)
+    const deduped: CompletionItem[] = []
+    let lastAdded: CompletionItem = null
+    for (let i = 0; i < sorted.length; i++) {
+      if (i > 0 && lastAdded.label === sorted[i].label) {
+        continue
+      }
 
-    return sorted
+      lastAdded = sorted[i]
+      deduped.push(lastAdded)
+    }
+
+    return deduped
   }
 
   private async onCompletionResolve(
