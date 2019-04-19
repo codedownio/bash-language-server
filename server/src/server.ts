@@ -257,6 +257,7 @@ export default class BashServer {
         return item
       }
     } catch (error) {
+      this.connection.console.error(`Error in completionItem/resolve: '${error}'`)
       return item
     }
   }
